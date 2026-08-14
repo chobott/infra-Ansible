@@ -1,0 +1,18 @@
+---
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: "{{ nginx_package }}"
+    state: present
+    update_cache: true
+
+- name: Ensure Nginx is running
+  ansible.builtin.systemd:
+    name: "{{ nginx_service }}"
+    state: started
+    enabled: true
+
+- name: Deploy index.html
+  ansible.builtin.copy:
+    dest: "{{ nginx_root }}/index.html"
+    mode: '0644'
+    content: "{{ nginx_index_content }}"

@@ -1,0 +1,50 @@
+---
+- name: Basic security hardening
+  hosts: all
+  become: true
+  vars:
+    ssh_port: 22
+    allowed_ssh_users: []
+  tasks:
+    - name: Ensure SSH is configured securely
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PermitRootLogin"
+        line: "PermitRootLogin no"
+        validate: "sshd -t -f %s"
+      notify: Restart SSH
+
+    - name: Disable password authentication (optional, ensure keys are set)
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
+        validate: "sshd -t -f %s"
+      notify: Restart SSH
+
+    - name: Configure SSH port
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?Port"
+        line: "Port {{ ssh_port }}"
+        validate: "sshd -t -f %s"
+      notify: Restart SSH
+
+    - name: Ensure fail2ban is installed and running
+      ansible.builtin.apt:
+        name: fail2ban
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure fail2ban service is enabled
+      ansible.builtin.systemd:
+        name: fail2ban
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.systemd:
+        name: sshd
+        state: restarted

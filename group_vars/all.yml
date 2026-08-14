@@ -1,0 +1,9 @@
+---
+# Global variables for all hosts
+ansible_python_interpreter: /usr/bin/python3
+
+# SSH settings
+ssh_port: 22
+
+# Nginx defaults
+nginx_package: nginx

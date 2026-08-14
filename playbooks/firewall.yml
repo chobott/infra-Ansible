@@ -1,0 +1,50 @@
+---
+- name: Configure UFW firewall
+  hosts: all
+  become: true
+  vars:
+    ufw_default_incoming: deny
+    ufw_default_outgoing: allow
+    ufw_rules:
+      - rule: allow
+        port: "{{ ssh_port | default(22) }}"
+        proto: tcp
+        comment: SSH
+      - rule: allow
+        port: 80
+        proto: tcp
+        comment: HTTP
+      - rule: allow
+        port: 443
+        proto: tcp
+        comment: HTTPS
+  tasks:
+    - name: Install UFW
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Set default policies
+      ansible.builtin.ufw:
+        policy: "{{ ufw_default_incoming }}"
+        direction: incoming
+
+    - name: Allow outgoing by default
+      ansible.builtin.ufw:
+        policy: "{{ ufw_default_outgoing }}"
+        direction: outgoing
+
+    - name: Apply firewall rules
+      ansible.builtin.ufw:
+        rule: "{{ item.rule }}"
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+        comment: "{{ item.comment }}"
+      loop: "{{ ufw_rules }}"
+
+    - name: Enable UFW
+      ansible.builtin.ufw:
+        state: enabled
+        policy: "{{ ufw_default_incoming }}"

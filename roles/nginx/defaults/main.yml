@@ -1,0 +1,7 @@
+---
+nginx_package: nginx
+nginx_service: nginx
+nginx_root: /var/www/html
+nginx_index_content: |
+  <h1>Hello from {{ inventory_hostname }}</h1>
+  <p>Deployed by Ansible</p>
